@@ -165,6 +165,7 @@
       const [csvLoading, setCsvLoading] = React.useState(false);
       const [showDropdown, setShowDropdown] = React.useState(false);
       const [nameSelected, setNameSelected] = React.useState(false);
+      const [selectedName, setSelectedName] = React.useState('');
       const [nameError, setNameError] = React.useState(null);
       const [gameMode, setGameMode] = React.useState(null);
       const [currentQuestion, setCurrentQuestion] = React.useState(0);
@@ -290,7 +291,6 @@
         // If user selected a name from the list, keep dropdown hidden until they edit the input again
         if (nameSelected) {
           setShowDropdown(false);
-          setNameSelected(false);
           setNameError(null);
           return;
         }
@@ -694,6 +694,7 @@
         try {
           setGameState('mainMenu');
           setFullName('');
+          setSelectedName('');
           setGameMode(null);
           setCurrentQuestion(0);
           setScore(0);
@@ -1018,6 +1019,7 @@
                     onChange={(e) => {
                       setFullName(e.target.value);
                       setNameSelected(false);
+                      setSelectedName('');
                       setNameError(null);
                     }}
                     onFocus={() => setShowDropdown(!nameSelected && fullName.trim() && filteredNames.length > 0)}
@@ -1028,6 +1030,7 @@
                     <button
                       onClick={() => {
                         setFullName('');
+                        setSelectedName('');
                         setNameSelected(false);
                         setShowDropdown(false);
                         setNameError(null);
@@ -1056,6 +1059,7 @@
                         key={index}
                         onClick={() => {
                           setFullName(name.full);
+                          setSelectedName(name.full);
                           setNameSelected(true);
                           setShowDropdown(false);
                           setNameError(null);
