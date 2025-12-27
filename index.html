@@ -164,6 +164,7 @@
       const [csvError, setCsvError] = React.useState(null);
       const [csvLoading, setCsvLoading] = React.useState(false);
       const [showDropdown, setShowDropdown] = React.useState(false);
+      const [nameSelected, setNameSelected] = React.useState(false);
       const [nameError, setNameError] = React.useState(null);
       const [gameMode, setGameMode] = React.useState(null);
       const [currentQuestion, setCurrentQuestion] = React.useState(0);
@@ -285,9 +286,19 @@
       // Filter names based on input
       React.useEffect(() => {
         const lowerInput = fullName.toLowerCase().trim();
+
+        // If user selected a name from the list, keep dropdown hidden until they edit the input again
+        if (nameSelected) {
+          setShowDropdown(false);
+          setNameSelected(false);
+          setNameError(null);
+          return;
+        }
+
         if (lowerInput === '') {
           setFilteredNames(names);
           setShowDropdown(false);
+          setNameSelected(false);
           setNameError(null);
         } else {
           const filtered = names.filter(({ full }) =>
@@ -297,9 +308,9 @@
           setShowDropdown(filtered.length > 0);
           console.log('Filtered names:', filtered.length, filtered);
         }
-      }, [fullName, names]);
+      }, [fullName, names, nameSelected]);
 
-      // Handle click outside to close dropdown
+// Handle click outside to close dropdown
       React.useEffect(() => {
         const handleClickOutside = (event) => {
           if (inputRef.current && !inputRef.current.contains(event.target)) {
@@ -698,6 +709,7 @@
           setLeaderboardError(null);
           setQuestionStartTime(null);
           setShowDropdown(false);
+          setNameSelected(false);
           setNameError(null);
         } catch (error) {
           console.error('Error restarting game:', error);
@@ -711,7 +723,7 @@
           const leaderboardTitle = language === 'en'
             ? (leaderboardType === 'mini' ? 'Mini Game Leaderboard' : 'Full Game Leaderboard')
             : (leaderboardType === 'mini' ? '迷你游戏排行榜' : '完整游戏排行榜');
-          const maxScore = leaderboardType === 'mini' ? 10 : 20;
+          const maxScore = leaderboardType === 'mini' ? 10 : (questions.length || 0);
 
           const uniqueLeaderboard = Object.values(
             leaderboard.reduce((acc, entry) => {
@@ -752,7 +764,7 @@
                           <tr key={index} className={darkMode ? 'bg-gray-800' : 'bg-white'}>
                             <td className="px-4 py-2 border">{index + 1}</td>
                             <td className="px-4 py-2 border min-w-0 truncate">{entry.name}</td>
-                            <td className="px-4 py-2 border">{entry.score}/{maxScore}</td>
+                            <td className="px-4 py-2 border">{entry.score}/{maxScore || entry.score}</td>
                             <td className="px-4 py-2 border">{formatTime(entry.completionTime)}</td>
                           </tr>
                         ))
@@ -976,7 +988,7 @@
                   onClick={() => handleModeSelect('full')}
                   className="w-24 h-24 bg-custom-blue text-white rounded-lg hover:bg-opacity-80 transition-colors flex flex-col items-center justify-center text-sm"
                 >
-                  {language === 'en' ? <>Full<br />(20Q)</> : <>完整<br />(20题)</>}
+                  {language === 'en' ? <>Full<br />({questions.length || 0}Q)</> : <>完整<br />({questions.length || 0}题)</>}
                 </button>
                 <button
                   onClick={() => setGameState('mainMenu')}
@@ -1005,9 +1017,10 @@
                     value={fullName}
                     onChange={(e) => {
                       setFullName(e.target.value);
+                      setNameSelected(false);
                       setNameError(null);
                     }}
-                    onFocus={() => setShowDropdown(fullName.trim() && filteredNames.length > 0)}
+                    onFocus={() => setShowDropdown(!nameSelected && fullName.trim() && filteredNames.length > 0)}
                     className={`w-full p-2 pr-10 border rounded-lg ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
                     required
                   />
@@ -1015,6 +1028,7 @@
                     <button
                       onClick={() => {
                         setFullName('');
+                        setNameSelected(false);
                         setShowDropdown(false);
                         setNameError(null);
                       }}
@@ -1042,6 +1056,7 @@
                         key={index}
                         onClick={() => {
                           setFullName(name.full);
+                          setNameSelected(true);
                           setShowDropdown(false);
                           setNameError(null);
                         }}
