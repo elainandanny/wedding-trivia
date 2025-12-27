@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>3rd Grade School Trivia Game</title>
+  <title>Elaina & Danny Wedding Trivia</title>
   <!-- Use stable CDN URLs -->
   <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
@@ -813,10 +813,10 @@
           {gameState === 'mainMenu' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
-                {language === 'en' ? '3rd Grade School Trivia' : '三年级学校知识竞赛'}
+                {language === 'en' ? 'Elaina & Danny Wedding Trivia' : 'Elaina 和 Danny 婚礼知识问答'}
               </h1>
               <p className="text-lg mb-6">
-                {language === 'en' ? 'Welcome to the trivia game!' : '欢迎参加知识竞赛！'}
+                {language === 'en' ? 'Welcome to Elaina & Danny’s wedding trivia!' : '欢迎参加 Elaina 和 Danny 的婚礼知识问答！'}
               </p>
               <div className="flex flex-wrap space-x-4 justify-center">
                 <button
@@ -981,7 +981,7 @@
           {gameState === 'nameInput' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
-                {language === 'en' ? '3rd Grade School Trivia' : '三年级学校知识竞赛'}
+                {language === 'en' ? 'Elaina & Danny Wedding Trivia' : 'Elaina 和 Danny 婚礼知识问答'}
               </h1>
               <p className="text-lg mb-6">
                 {language === 'en'
@@ -1069,7 +1069,7 @@
           {gameState === 'playing' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
-                {language === 'en' ? '3rd Grade School Trivia' : '三年级学校知识竞赛'}
+                {language === 'en' ? 'Elaina & Danny Wedding Trivia' : 'Elaina 和 Danny 婚礼知识问答'}
               </h1>
               {questionsLoading ? (
                 <p className="text-lg mb-6">{language === 'en' ? 'Loading questions...' : '正在加载问题...'}</p>
@@ -1080,7 +1080,7 @@
               ) : (
                 <>
                   <p className="text-lg mb-6">
-                    {language === 'en' ? `Welcome, ${fullName}!` : `欢迎, ${fullName}！`}
+                    {language === 'en' ? `Welcome, ${fullName}! Let’s celebrate Elaina & Danny!` : `欢迎，${fullName}！一起庆祝 Elaina 和 Danny！`}
                   </p>
                   {gameMode === 'mini' && (
                     <p className="text-md mb-4 text-red-600">
@@ -1130,10 +1130,10 @@
               </p>
               <p className="text-md mb-6">
                 {score === shuffledQuestions.length
-                  ? (language === 'en' ? "Perfect! You're a trivia star!" : "完美！你是一个知识明星！")
+                  ? (language === 'en' ? "Perfect! You know Elaina & Danny so well!" : "完美！你太了解 Elaina 和 Danny 了！")
                   : score >= shuffledQuestions.length / 2
-                  ? (language === 'en' ? "Great job! You know your facts!" : "干得好！你懂得很多！")
-                  : (language === 'en' ? "Nice try! Keep studying!" : "不错！继续学习！")}
+                  ? (language === 'en' ? "Nice! You’re definitely part of the inner circle." : "很棒！你绝对是“自己人”！")
+                  : (language === 'en' ? "Good try! Time for a quick couple-facts refresher 😄" : "不错哦！快来补补情侣小知识 😄")}
               </p>
               <div className="flex flex-wrap space-x-4 justify-center mb-4">
                 <button
