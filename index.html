@@ -196,7 +196,7 @@
           setCsvLoading(true);
           setCsvError(null);
           try {
-            const csvUrl = 'https://raw.githubusercontent.com/landolin93/wedding-trivia/main/names.csv';
+            const csvUrl = 'https://raw.githubusercontent.com/elainandanny/wedding-trivia/main/names.csv';
             const text = await fetchWithRetry(csvUrl);
             const result = Papa.parse(text, { header: true, skipEmptyLines: true });
             if (result.errors.length > 0) {
@@ -240,8 +240,8 @@
           setQuestionsError(null);
           try {
             const csvUrl = language === 'en'
-              ? 'https://raw.githubusercontent.com/landolin93/wedding-trivia/main/English_Questions.csv'
-              : 'https://raw.githubusercontent.com/landolin93/wedding-trivia/main/Chinese_Questions.csv';
+              ? 'https://raw.githubusercontent.com/elainandanny/wedding-trivia/main/English_Questions.csv'
+              : 'https://raw.githubusercontent.com/elainandanny/wedding-trivia/main/Chinese_Questions.csv';
             const text = await fetchWithRetry(csvUrl);
             const result = Papa.parse(text, { header: true, skipEmptyLines: true });
             if (result.errors.length > 0) {
