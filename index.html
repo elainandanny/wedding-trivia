@@ -110,10 +110,10 @@
       alert('Failed to initialize Firebase: ' + error.message);
     }
 
-    // Eastern Time schedule for March 17, 2026.
-    // March 17, 2026 is in EDT (UTC-4), so these timestamps represent the intended ET moments.
-    const GAME_OPEN_TIME = new Date('2026-03-17T05:42:00-04:00');
-    const LEADERBOARD_CUTOFF = new Date('2026-03-17T05:43:00-04:00');
+    // Eastern Time schedule for March 21, 2026.
+    // March 211, 2026 is in EDT (UTC-4), so these timestamps represent the intended ET moments.
+    const GAME_OPEN_TIME = new Date('2026-03-21T13:00:00-04:00');
+    const LEADERBOARD_CUTOFF = new Date('2026-03-17T17:15:00-04:00');
 
     const isBeforeGameOpen = () => new Date() < GAME_OPEN_TIME;
     const isAfterCutoff = () => new Date() >= LEADERBOARD_CUTOFF;
@@ -543,8 +543,8 @@
           if (isBeforeGameOpen()) {
             setNameError(
               language === 'en'
-                ? 'The game opens at 5:25 AM ET.'
-                : '游戏将在美东时间早上 5:25 开放。'
+                ? 'The game opens at 1:00 PM.'
+                : '遊戲將在美東時間下午 1:00。'
             );
             return;
           }
@@ -834,15 +834,15 @@
           {isBeforeGameOpen() && (
             <p className="text-sm text-yellow-600 mb-4">
               {language === 'zh'
-                ? '游戏将在美东时间早上 5:25 开放。'
-                : 'The game opens at 5:25 AM ET.'}
+                ? '遊戲將在美東時間下午 1:00。'
+                : 'The game opens at 1:00 PM.'}
             </p>
           )}
 
           {!isBeforeGameOpen() && isAfterCutoff() && (
             <p className="text-sm text-yellow-600 mb-4">
               {language === 'zh'
-                ? '排行榜现已关闭。您仍然可以继续游戏娱乐！'
+                ? '排行榜現已關閉。您仍然可以繼續遊戲娛樂！'
                 : 'Leaderboard is now closed. You can still play for fun!'}
             </p>
           )}
@@ -879,7 +879,7 @@
                   <>
                     Elaina 和 Danny 的
                     <br />
-                    婚礼知识问答
+                    婚禮知識問答
                   </>
                 )}
               </h1>
