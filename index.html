@@ -112,8 +112,8 @@
 
     // Eastern Time schedule for March 17, 2026.
     // March 17, 2026 is in EDT (UTC-4), so these timestamps represent the intended ET moments.
-    const GAME_OPEN_TIME = new Date('2026-03-17T05:25:00-04:00');
-    const LEADERBOARD_CUTOFF = new Date('2026-03-17T05:30:00-04:00');
+    const GAME_OPEN_TIME = new Date('2026-03-17T05:42:00-04:00');
+    const LEADERBOARD_CUTOFF = new Date('2026-03-17T05:43:00-04:00');
 
     const isBeforeGameOpen = () => new Date() < GAME_OPEN_TIME;
     const isAfterCutoff = () => new Date() >= LEADERBOARD_CUTOFF;
@@ -1209,25 +1209,27 @@
                           key={index}
                           onClick={() => handleAnswer(option)}
                           disabled={selectedOption !== null || answered || (gameMode === 'mini' && questionElapsedTime >= 20)}
-                          className={`w-32 h-16 rounded-lg transition-colors p-2 flex items-center justify-center text-center text-sm flex-wrap
-                            ${
-                              answered
-                                ? isAfterCutoff()
-                                  ? option === shuffledQuestions[currentQuestion].correct
-                                    ? 'bg-green-500 text-white'
-                                    : darkMode
-                                      ? 'bg-gray-700 text-gray-100'
-                                      : 'bg-gray-200 text-gray-900'
-                                  : selectedOption === option
-                                    ? 'bg-custom-blue text-white'
-                                    : darkMode
-                                      ? 'bg-gray-700 text-gray-100'
-                                      : 'bg-gray-200 text-gray-900'
-                                : darkMode
-                                  ? 'bg-gray-700 hover:bg-gray-600'
-                                  : 'bg-gray-200 hover:bg-gray-300'
-                            }
-                            disabled:cursor-not-allowed`}
+                         className={`w-32 h-16 rounded-lg transition-colors p-2 flex items-center justify-center text-center text-sm flex-wrap
+  ${
+    answered
+      ? isAfterCutoff()
+        ? option === shuffledQuestions[currentQuestion].correct
+          ? 'bg-green-500 text-white'
+          : selectedOption === option
+            ? 'bg-red-500 text-white'
+            : darkMode
+              ? 'bg-gray-700 text-gray-100'
+              : 'bg-gray-200 text-gray-900'
+        : selectedOption === option
+          ? 'bg-custom-blue text-white'
+          : darkMode
+            ? 'bg-gray-700 text-gray-100'
+            : 'bg-gray-200 text-gray-900'
+      : darkMode
+        ? 'bg-gray-700 hover:bg-gray-600'
+        : 'bg-gray-200 hover:bg-gray-300'
+  }
+  disabled:cursor-not-allowed`}
                         >
                           {option}
                         </button>
