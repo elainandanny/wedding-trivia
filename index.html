@@ -111,9 +111,9 @@
     }
 
     // Eastern Time schedule for March 21, 2026.
-    // March 211, 2026 is in EDT (UTC-4), so these timestamps represent the intended ET moments.
+    // March 21, 2026 is in EDT (UTC-4), so these timestamps represent the intended ET moments.
     const GAME_OPEN_TIME = new Date('2026-03-21T13:00:00-04:00');
-    const LEADERBOARD_CUTOFF = new Date('2026-03-17T17:15:00-04:00');
+    const LEADERBOARD_CUTOFF = new Date('2026-03-21T17:15:00-04:00');
 
     const isBeforeGameOpen = () => new Date() < GAME_OPEN_TIME;
     const isAfterCutoff = () => new Date() >= LEADERBOARD_CUTOFF;
