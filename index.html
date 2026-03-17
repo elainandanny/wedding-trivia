@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3rd Grade School Trivia Game</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wedding Trivia</title>
+  <!-- Use stable CDN URLs -->
   <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
+  <!-- Configure Tailwind with custom color -->
   <script>
     tailwind.config = {
       theme: {
@@ -22,28 +22,26 @@
       }
     }
   </script>
-
+  <!-- Firebase Compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="flex flex-col min-h-screen bg-gray-200 font-sans">
   <div id="root" class="min-h-screen flex items-center justify-center"></div>
-
   <audio id="background-music" loop>
-    <source src="./bensound-ukulele.mp3" type="audio/mpeg" />
+    <source src="./bensound-ukulele.mp3" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
 
+  <!-- Check for file:// protocol -->
   <script>
     if (window.location.protocol === 'file:') {
-      alert(
-        'Please serve this file using a local server to avoid CORS errors.\n\n' +
-        'Try:\n' +
-        '- Node.js: `npx serve`\n' +
-        '- Python: `python -m http.server 8000`\n' +
-        '- VS Code: Live Server extension\n\n' +
-        'Then access via http://localhost.'
-      );
+      alert('Please serve this file using a local server to avoid CORS errors.\n\n' +
+            'Try:\n' +
+            '- Node.js: `npx serve`\n' +
+            '- Python: `python -m http.server 8000`\n' +
+            '- VS Code: Live Server extension\n\n' +
+            'Then access via http://localhost.');
       document.getElementById('root').innerHTML = `
         <div class="p-8 text-center text-red-600">
           <h1>Cannot load app</h1>
@@ -56,12 +54,14 @@
   </script>
 
   <script type="text/babel">
+    // Log script loading
     console.log('React script loaded:', typeof React !== 'undefined');
     console.log('ReactDOM script loaded:', typeof ReactDOM !== 'undefined');
     console.log('Babel script loaded:', typeof Babel !== 'undefined');
     console.log('Firebase script loaded:', typeof firebase !== 'undefined');
     console.log('PapaParse script loaded:', typeof Papa !== 'undefined');
 
+    // Error Boundary Component
     class ErrorBoundary extends React.Component {
       state = { hasError: false, error: null };
 
@@ -88,6 +88,7 @@
       }
     }
 
+    // Initialize Firebase with your configuration
     const firebaseConfig = {
       apiKey: "AIzaSyD-uMdBpQhau_mQRQwtUqDbNqlPR8LVfq4",
       authDomain: "wedding-trivia-test.firebaseapp.com",
@@ -98,6 +99,7 @@
       measurementId: "G-T5XZBDJQX2"
     };
 
+    // Initialize Firebase
     let db;
     try {
       firebase.initializeApp(firebaseConfig);
@@ -108,6 +110,7 @@
       alert('Failed to initialize Firebase: ' + error.message);
     }
 
+    // Fisher-Yates shuffle
     function shuffle(array) {
       const newArray = [...array];
       for (let i = newArray.length - 1; i > 0; i--) {
@@ -117,18 +120,24 @@
       return newArray;
     }
 
+    // Format time from seconds to hours, minutes, seconds (omit 0h, 0m)
     function formatTime(seconds) {
       if (!seconds && seconds !== 0) return '0.00s';
       const hours = Math.floor(seconds / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
       const remainingSeconds = (seconds % 60).toFixed(2);
       const parts = [];
-      if (hours > 0) parts.push(`${hours}h`);
-      if (minutes > 0) parts.push(`${minutes}m`);
+      if (hours > 0) {
+        parts.push(`${hours}h`);
+      }
+      if (minutes > 0) {
+        parts.push(`${minutes}m`);
+      }
       parts.push(`${remainingSeconds}s`);
       return parts.join(' ');
     }
 
+    // Retry fetch with delay
     async function fetchWithRetry(url, retries = 3, delay = 1000) {
       for (let i = 0; i < retries; i++) {
         try {
@@ -146,11 +155,6 @@
       }
     }
 
-    // Fixed cutoff at March 17, 2026, 5:00 AM Eastern local time.
-    // March 17, 2026 is in EDT (UTC-4), so this represents 5:00 AM ET.
-    const LEADERBOARD_CUTOFF = new Date('2026-03-17T05:05:00-04:00');
-    const isAfterCutoff = () => new Date() >= LEADERBOARD_CUTOFF;
-
     function TriviaGame() {
       const [gameState, setGameState] = React.useState('languageSelect');
       const [language, setLanguage] = React.useState(null);
@@ -160,6 +164,8 @@
       const [csvError, setCsvError] = React.useState(null);
       const [csvLoading, setCsvLoading] = React.useState(false);
       const [showDropdown, setShowDropdown] = React.useState(false);
+      const [nameSelected, setNameSelected] = React.useState(false);
+      const [selectedName, setSelectedName] = React.useState('');
       const [nameError, setNameError] = React.useState(null);
       const [gameMode, setGameMode] = React.useState(null);
       const [currentQuestion, setCurrentQuestion] = React.useState(0);
@@ -186,19 +192,18 @@
       const [questionsError, setQuestionsError] = React.useState(null);
       const inputRef = React.useRef(null);
 
+      // Fetch names from CSV file
       React.useEffect(() => {
         const fetchNames = async () => {
           setCsvLoading(true);
           setCsvError(null);
           try {
-            const csvUrl = 'https://raw.githubusercontent.com/landolin93/wedding-trivia/main/names.csv';
+            const csvUrl = 'https://raw.githubusercontent.com/elainandanny/wedding-trivia/main/names.csv';
             const text = await fetchWithRetry(csvUrl);
             const result = Papa.parse(text, { header: true, skipEmptyLines: true });
-
             if (result.errors.length > 0) {
               console.warn('PapaParse errors:', result.errors);
             }
-
             const parsedNames = result.data
               .map(row => {
                 const first = row['First']?.trim();
@@ -210,22 +215,18 @@
                 return { first, last, full: `${first} ${last}` };
               })
               .filter(name => name !== null);
-
             if (parsedNames.length === 0) {
               throw new Error('No valid names found in CSV. Expected headers: First,Last');
             }
-
             setNames(parsedNames);
             setFilteredNames(parsedNames);
             console.log('Names loaded:', parsedNames.length, parsedNames);
           } catch (error) {
             console.error('Error fetching names:', error.message, error.stack);
-            setCsvError(
-              language === 'en'
-                ? `Failed to load names: ${error.message}. You can still play without name validation.`
-                : `无法加载姓名：${error.message}。您仍可继续游戏，无需姓名验证。`
-            );
-            setNames([]);
+            setCsvError(language === 'en'
+              ? `Failed to load names: ${error.message}. You can still play without name validation.`
+              : `无法加载姓名：${error.message}。您仍可继续游戏，无需姓名验证。`);
+            setNames([]); // Allow game to proceed without names
           } finally {
             setCsvLoading(false);
           }
@@ -233,6 +234,7 @@
         fetchNames();
       }, [language]);
 
+      // Fetch questions from CSV file based on language
       React.useEffect(() => {
         const fetchQuestions = async () => {
           if (!language) return;
@@ -240,15 +242,13 @@
           setQuestionsError(null);
           try {
             const csvUrl = language === 'en'
-              ? 'https://raw.githubusercontent.com/landolin93/wedding-trivia/main/English_Questions.csv'
-              : 'https://raw.githubusercontent.com/landolin93/wedding-trivia/main/Chinese_Questions.csv';
+              ? 'https://raw.githubusercontent.com/elainandanny/wedding-trivia/main/English_Questions.csv'
+              : 'https://raw.githubusercontent.com/elainandanny/wedding-trivia/main/Chinese_Questions.csv';
             const text = await fetchWithRetry(csvUrl);
             const result = Papa.parse(text, { header: true, skipEmptyLines: true });
-
             if (result.errors.length > 0) {
               console.warn('PapaParse errors:', result.errors);
             }
-
             const parsedQuestions = result.data
               .map(row => {
                 const question = row['Question']?.trim();
@@ -256,12 +256,10 @@
                 const incorrect1 = row['Incorrect_Answer_1']?.trim();
                 const incorrect2 = row['Incorrect_Answer_2']?.trim();
                 const incorrect3 = row['Incorrect_Answer_3']?.trim();
-
                 if (!question || !correct || !incorrect1 || !incorrect2 || !incorrect3) {
                   console.warn('Invalid question row:', row);
                   return null;
                 }
-
                 return {
                   question: { [language]: question },
                   options: { [language]: [correct, incorrect1, incorrect2, incorrect3] },
@@ -269,20 +267,16 @@
                 };
               })
               .filter(q => q !== null);
-
             if (parsedQuestions.length === 0) {
               throw new Error('No valid questions found in CSV. Expected headers: Question,Correct_Answer,Incorrect_Answer_1,Incorrect_Answer_2,Incorrect_Answer_3');
             }
-
             setQuestions(parsedQuestions);
             console.log('Questions loaded:', parsedQuestions.length, parsedQuestions);
           } catch (error) {
             console.error('Error fetching questions:', error.message, error.stack);
-            setQuestionsError(
-              language === 'en'
-                ? `Failed to load questions: ${error.message}`
-                : `无法加载问题：${error.message}`
-            );
+            setQuestionsError(language === 'en'
+              ? `Failed to load questions: ${error.message}`
+              : `无法加载问题：${error.message}`);
           } finally {
             setQuestionsLoading(false);
           }
@@ -290,11 +284,21 @@
         fetchQuestions();
       }, [language]);
 
+      // Filter names based on input
       React.useEffect(() => {
         const lowerInput = fullName.toLowerCase().trim();
+
+        // If user selected a name from the list, keep dropdown hidden until they edit the input again
+        if (nameSelected) {
+          setShowDropdown(false);
+          setNameError(null);
+          return;
+        }
+
         if (lowerInput === '') {
           setFilteredNames(names);
           setShowDropdown(false);
+          setNameSelected(false);
           setNameError(null);
         } else {
           const filtered = names.filter(({ full }) =>
@@ -304,8 +308,9 @@
           setShowDropdown(filtered.length > 0);
           console.log('Filtered names:', filtered.length, filtered);
         }
-      }, [fullName, names]);
+      }, [fullName, names, nameSelected]);
 
+// Handle click outside to close dropdown
       React.useEffect(() => {
         const handleClickOutside = (event) => {
           if (inputRef.current && !inputRef.current.contains(event.target)) {
@@ -313,15 +318,16 @@
           }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+        };
       }, []);
 
+      // Toggle dark mode classes
       React.useEffect(() => {
         try {
           const body = document.body;
           const root = document.getElementById('root').firstChild;
-          if (!root) return;
-
           if (darkMode) {
             body.classList.add('bg-gray-700');
             body.classList.remove('bg-gray-200');
@@ -338,12 +344,12 @@
         }
       }, [darkMode]);
 
+      // Control background music
       React.useEffect(() => {
         try {
           const audio = document.getElementById('background-music');
           audio.volume = 0.2;
           audio.muted = muted;
-
           audio.play().then(() => {
             console.log('Background music started successfully');
           }).catch(error => {
@@ -358,13 +364,11 @@
             };
             document.addEventListener('click', handleInteraction);
           });
-
           audio.onended = () => {
             console.log('Audio ended, restarting due to loop attribute');
             audio.currentTime = 0;
             audio.play().catch(err => console.error('Restart error:', err));
           };
-
           return () => {
             audio.pause();
             console.log('Audio paused on component unmount');
@@ -374,6 +378,7 @@
         }
       }, [muted]);
 
+      // Sync leaderboardType with gameState
       React.useEffect(() => {
         try {
           if (gameState === 'miniLeaderboard') {
@@ -386,20 +391,18 @@
         }
       }, [gameState]);
 
+      // Fetch leaderboards from Firestore
       const fetchLeaderboards = async () => {
         console.log('Fetching leaderboards at:', new Date().toISOString());
         setIsLoading(true);
         setLeaderboardError(null);
-
         try {
           if (!db) throw new Error('Firestore not initialized');
-
           const miniSnapshot = await db.collection('miniLeaderboard')
             .orderBy('score', 'desc')
             .orderBy('completionTime', 'asc')
             .limit(10)
             .get();
-
           console.log('Mini snapshot size:', miniSnapshot.size);
           const miniData = miniSnapshot.empty ? [] : miniSnapshot.docs.map(doc => {
             const data = doc.data();
@@ -418,7 +421,6 @@
             .orderBy('completionTime', 'asc')
             .limit(10)
             .get();
-
           console.log('Full snapshot size:', fullSnapshot.size);
           const fullData = fullSnapshot.empty ? [] : fullSnapshot.docs.map(doc => {
             const data = doc.data();
@@ -438,16 +440,15 @@
           }));
         } catch (error) {
           console.error('Fetch error:', error.message, error.stack);
-          setLeaderboardError(
-            language === 'en'
-              ? 'Failed to load leaderboards: ' + error.message
-              : '无法加载排行榜：' + error.message
-          );
+          setLeaderboardError(language === 'en'
+            ? 'Failed to load leaderboards: ' + error.message
+            : '无法加载排行榜：' + error.message);
         } finally {
           setIsLoading(false);
         }
       };
 
+      // Fetch leaderboards on navigation with 15-second throttle
       React.useEffect(() => {
         console.log('Navigated to:', gameState, 'at:', new Date().toISOString());
         if (['miniLeaderboard', 'fullLeaderboard', 'result'].includes(gameState) && db && !isLoading) {
@@ -470,6 +471,7 @@
         }
       }, [gameState, lastFetchTimes]);
 
+      // Initialize questions and options when starting game
       const initializeGame = () => {
         try {
           if (questions.length === 0) {
@@ -489,6 +491,7 @@
         }
       };
 
+      // Timer logic for Mini Game countdown
       React.useEffect(() => {
         try {
           if (gameState === 'playing' && gameMode === 'mini' && !answered && questionElapsedTime < 20) {
@@ -533,44 +536,24 @@
       const handleNameSubmit = (e) => {
         try {
           e.preventDefault();
-
           if (fullName.trim()) {
             const [first, last] = fullName.split(' ').map(s => s.trim());
-
             if (!first || !last) {
-              setNameError(
-                language === 'en'
-                  ? 'Please enter a valid full name (first and last).'
-                  : '请输入有效的全名（名字和姓氏）。'
-              );
+              setNameError(language === 'en' ? 'Please enter a valid full name (first and last).' : '请输入有效的全名（名字和姓氏）。');
               return;
             }
-
-            // Before cutoff: name must match the approved list.
-            // After cutoff: users can still play without name-list enforcement.
-            if (!isAfterCutoff() && names.length > 0) {
+            if (names.length > 0) {
               const isValidName = names.some(({ full }) => full.toLowerCase() === fullName.toLowerCase());
               console.log('Validating name:', fullName, 'Is valid:', isValidName);
-
               if (!isValidName) {
-                setNameError(
-                  language === 'en'
-                    ? 'Name must match a name in the list.'
-                    : '名字必须与列表中的名字匹配。'
-                );
+                setNameError(language === 'en' ? 'Name must match a name in the list.' : '名字必须与列表中的名字匹配。');
                 return;
               }
             }
-
             if (questions.length === 0) {
-              setNameError(
-                language === 'en'
-                  ? 'Questions not loaded. Please try again.'
-                  : '问题未加载。请重试。'
-              );
+              setNameError(language === 'en' ? 'Questions not loaded. Please try again.' : '问题未加载。请重试。');
               return;
             }
-
             setNameError(null);
             setCurrentQuestion(0);
             setScore(0);
@@ -596,13 +579,11 @@
         try {
           const timeSpent = (performance.now() - questionStartTime) / 1000;
           console.log('Timeout timeSpent:', timeSpent);
-
           setTotalTime(prev => {
             const newTotal = prev + timeSpent;
             console.log('Updated totalTime:', newTotal);
             return newTotal;
           });
-
           if (currentQuestion + 1 < shuffledQuestions.length) {
             setCurrentQuestion(currentQuestion + 1);
             setQuestionElapsedTime(0);
@@ -626,24 +607,19 @@
             console.log('Answer ignored: time limit exceeded');
             return;
           }
-
           if (!shuffledQuestions[currentQuestion]) {
             console.error('No question available at index:', currentQuestion);
             return;
           }
-
           setSelectedOption(option);
           setAnswered(true);
-
           const timeSpent = (performance.now() - questionStartTime) / 1000;
           console.log('Answer selected:', option, 'timeSpent:', timeSpent);
-
           setTotalTime(prev => {
             const newTotal = prev + timeSpent;
             console.log('Updated totalTime:', newTotal);
             return newTotal;
           });
-
           const correctAnswer = shuffledQuestions[currentQuestion].correct;
           if (option === correctAnswer) {
             setScore(score + 1);
@@ -651,7 +627,6 @@
           } else {
             console.log('Incorrect answer, correct was:', correctAnswer);
           }
-
           setTimeout(() => {
             if (currentQuestion + 1 < shuffledQuestions.length) {
               setCurrentQuestion(currentQuestion + 1);
@@ -677,32 +652,16 @@
 
       const saveScoreAndCheckEntries = async (finalScore = score) => {
         try {
-          const completionTime = totalTime + ((performance.now() - questionStartTime) / 1000);
-          console.log(
-            'Saving completionTime:',
-            completionTime,
-            'totalTime:',
-            totalTime,
-            'last question time:',
-            ((performance.now() - questionStartTime) / 1000)
-          );
-          setFinalTime(completionTime);
-
-          // After cutoff: players can still play, but leaderboard is frozen.
-          if (isAfterCutoff()) {
-            console.log('Leaderboard locked; score not saved.');
-            return;
-          }
-
           if (!db) throw new Error('Firestore not initialized');
-
           const leaderboardCollection = gameMode === 'mini' ? 'miniLeaderboard' : 'fullLeaderboard';
           const playerName = fullName;
-
+          const finalTime = totalTime + ((performance.now() - questionStartTime) / 1000);
+          console.log('Saving completionTime:', finalTime, 'totalTime:', totalTime, 'last question time:', ((performance.now() - questionStartTime) / 1000));
+          setFinalTime(finalTime);
           const newEntry = {
             name: playerName,
             score: finalScore,
-            completionTime: completionTime,
+            completionTime: finalTime,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
           };
 
@@ -714,7 +673,6 @@
               .orderBy('score', 'desc')
               .orderBy('completionTime', 'asc')
               .get();
-
             if (playerEntries.docs.length > 2) {
               const lowestEntry = playerEntries.docs[playerEntries.docs.length - 1];
               await db.collection(leaderboardCollection).doc(lowestEntry.id).delete();
@@ -726,11 +684,9 @@
           await fetchLeaderboards();
         } catch (error) {
           console.error('Error saving score:', error);
-          alert(
-            language === 'en'
-              ? 'Failed to save score: ' + error.message
-              : '无法保存分数：' + error.message
-          );
+          alert(language === 'en'
+            ? 'Failed to save score: ' + error.message
+            : '无法保存分数：' + error.message);
         }
       };
 
@@ -738,6 +694,7 @@
         try {
           setGameState('mainMenu');
           setFullName('');
+          setSelectedName('');
           setGameMode(null);
           setCurrentQuestion(0);
           setScore(0);
@@ -753,6 +710,7 @@
           setLeaderboardError(null);
           setQuestionStartTime(null);
           setShowDropdown(false);
+          setNameSelected(false);
           setNameError(null);
         } catch (error) {
           console.error('Error restarting game:', error);
@@ -766,7 +724,7 @@
           const leaderboardTitle = language === 'en'
             ? (leaderboardType === 'mini' ? 'Mini Game Leaderboard' : 'Full Game Leaderboard')
             : (leaderboardType === 'mini' ? '迷你游戏排行榜' : '完整游戏排行榜');
-          const maxScore = leaderboardType === 'mini' ? 10 : 20;
+          const maxScore = leaderboardType === 'mini' ? 10 : (questions.length || 0);
 
           const uniqueLeaderboard = Object.values(
             leaderboard.reduce((acc, entry) => {
@@ -787,9 +745,7 @@
             <div>
               <h3 className="text-xl font-semibold mb-4">{leaderboardTitle}</h3>
               {isLoading ? (
-                <p className="text-lg mb-6">
-                  {language === 'en' ? 'Loading leaderboard...' : '加载排行榜...'}
-                </p>
+                <p className="text-lg mb-6">{language === 'en' ? 'Loading leaderboard...' : '加载排行榜...'}</p>
               ) : leaderboardError ? (
                 <p className="text-lg mb-6 text-red-600">{leaderboardError}</p>
               ) : (
@@ -809,7 +765,7 @@
                           <tr key={index} className={darkMode ? 'bg-gray-800' : 'bg-white'}>
                             <td className="px-4 py-2 border">{index + 1}</td>
                             <td className="px-4 py-2 border min-w-0 truncate">{entry.name}</td>
-                            <td className="px-4 py-2 border">{entry.score}/{maxScore}</td>
+                            <td className="px-4 py-2 border">{entry.score}/{maxScore || entry.score}</td>
                             <td className="px-4 py-2 border">{formatTime(entry.completionTime)}</td>
                           </tr>
                         ))
@@ -828,22 +784,19 @@
           );
         } catch (error) {
           console.error('Error rendering leaderboards:', error);
-          return (
-            <p className="text-lg mb-6 text-red-600">
-              {language === 'en' ? 'Error displaying leaderboard.' : '显示排行榜时出错。'}
-            </p>
-          );
+          return <p className="text-lg mb-6 text-red-600">{language === 'en' ? 'Error displaying leaderboard.' : '显示排行榜时出错。'}</p>;
         }
       }, [leaderboardType, leaderboardView, miniLeaderboard, fullLeaderboard, isLoading, leaderboardError, language, darkMode]);
 
       return (
         <div className={`p-8 rounded-lg shadow-lg max-w-lg w-full mx-auto text-center ${darkMode ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}`}>
+          {/* Icons Row */}
           <div className="flex justify-between mb-4">
             <button
               onClick={() => setDarkMode(!darkMode)}
               className={`w-12 h-12 flex items-center justify-center rounded-lg text-2xl ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'}`}
             >
-              {darkMode ? '\u2600' : '\u{1F319}'}
+              {darkMode ? '\u{2600}' : '\u{1F319}'}
             </button>
             <button
               onClick={() => setMuted(!muted)}
@@ -852,15 +805,6 @@
               {muted ? '\u{1F507}' : '\u{1F509}'}
             </button>
           </div>
-
-          {isAfterCutoff() && (
-            <p className="text-sm text-yellow-600 mb-4">
-              {language === 'zh'
-                ? '排行榜现已关闭。您仍然可以继续游戏娱乐！'
-                : 'Leaderboard is now closed. You can still play for fun!'}
-            </p>
-          )}
-
           {gameState === 'languageSelect' && (
             <div>
               <div className="flex justify-center space-x-4 mt-12">
@@ -879,32 +823,39 @@
               </div>
             </div>
           )}
-
           {gameState === 'mainMenu' && (
-            <div>
-              <h1 className="text-3xl font-bold mb-4 text-custom-blue">
-                {language === 'en' ? '3rd Grade School Trivia' : '三年级学校知识竞赛'}
-              </h1>
-              <p className="text-lg mb-6">
-                {language === 'en' ? 'Welcome to the trivia game!' : '欢迎参加知识竞赛！'}
-              </p>
-              <div className="flex flex-wrap space-x-4 justify-center">
-                <button
-                  onClick={() => setGameState('leaderboardSelect')}
-                  className="w-24 h-24 bg-custom-blue text-white rounded-lg hover:bg-opacity-80 transition-colors flex flex-col items-center justify-center text-sm"
-                >
-                  {language === 'en' ? <>Leader<br />board</> : <>排行<br />榜</>}
-                </button>
-                <button
-                  onClick={() => setGameState('playGame')}
-                  className="w-24 h-24 bg-custom-blue text-white rounded-lg hover:bg-opacity-80 transition-colors flex items-center justify-center text-sm"
-                >
-                  {language === 'en' ? 'Play' : '开始'}
-                </button>
-              </div>
-            </div>
-          )}
-
+  <div>
+    <h1 className="text-3xl font-bold mb-6 text-custom-blue leading-tight">
+      {language === 'en' ? (
+        <>
+          Elaina and Danny&apos;s
+          <br />
+          Wedding Trivia
+        </>
+      ) : (
+        <>
+          Elaina 和 Danny 的
+          <br />
+          婚礼知识问答
+        </>
+      )}
+    </h1>
+    <div className="flex flex-wrap space-x-4 justify-center">
+      <button
+        onClick={() => setGameState('leaderboardSelect')}
+        className="w-24 h-24 bg-custom-blue text-white rounded-lg hover:bg-opacity-80 transition-colors flex flex-col items-center justify-center text-sm"
+      >
+        {language === 'en' ? <>Leader<br />board</> : <>排行<br />榜</>}
+      </button>
+      <button
+        onClick={() => setGameState('playGame')}
+        className="w-24 h-24 bg-custom-blue text-white rounded-lg hover:bg-opacity-80 transition-colors flex items-center justify-center text-sm"
+      >
+        {language === 'en' ? 'Play' : '开始'}
+      </button>
+    </div>
+  </div>
+)}
           {gameState === 'leaderboardSelect' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
@@ -935,7 +886,6 @@
               </div>
             </div>
           )}
-
           {gameState === 'miniLeaderboard' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
@@ -978,7 +928,6 @@
               {renderLeaderboards()}
             </div>
           )}
-
           {gameState === 'fullLeaderboard' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
@@ -1021,7 +970,6 @@
               {renderLeaderboards()}
             </div>
           )}
-
           {gameState === 'playGame' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
@@ -1041,7 +989,7 @@
                   onClick={() => handleModeSelect('full')}
                   className="w-24 h-24 bg-custom-blue text-white rounded-lg hover:bg-opacity-80 transition-colors flex flex-col items-center justify-center text-sm"
                 >
-                  {language === 'en' ? <>Full<br />(20Q)</> : <>完整<br />(20题)</>}
+                  {language === 'en' ? <>Full<br />({questions.length || 0}Q)</> : <>完整<br />({questions.length || 0}题)</>}
                 </button>
                 <button
                   onClick={() => setGameState('mainMenu')}
@@ -1052,18 +1000,16 @@
               </div>
             </div>
           )}
-
           {gameState === 'nameInput' && (
             <div>
               <h1 className="text-3xl font-bold mb-4 text-custom-blue">
-                {language === 'en' ? '3rd Grade School Trivia' : '三年级学校知识竞赛'}
+                {language === 'en' ? 'Wedding Trivia' : '婚礼知识问答'}
               </h1>
               <p className="text-lg mb-6">
                 {language === 'en'
                   ? `Enter name for ${gameMode === 'mini' ? 'Mini' : 'Full'} Game!`
                   : `输入名字开始${gameMode === 'mini' ? '迷你' : '完整'}游戏！`}
               </p>
-
               <div className="relative w-full" ref={inputRef}>
                 <div className="relative">
                   <input
@@ -1072,9 +1018,11 @@
                     value={fullName}
                     onChange={(e) => {
                       setFullName(e.target.value);
+                      setNameSelected(false);
+                      setSelectedName('');
                       setNameError(null);
                     }}
-                    onFocus={() => setShowDropdown(fullName.trim() && filteredNames.length > 0)}
+                    onFocus={() => setShowDropdown(!nameSelected && fullName.trim() && filteredNames.length > 0)}
                     className={`w-full p-2 pr-10 border rounded-lg ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}
                     required
                   />
@@ -1082,6 +1030,8 @@
                     <button
                       onClick={() => {
                         setFullName('');
+                        setSelectedName('');
+                        setNameSelected(false);
                         setShowDropdown(false);
                         setNameError(null);
                       }}
@@ -1091,21 +1041,17 @@
                     </button>
                   )}
                 </div>
-
                 {csvLoading && (
                   <p className="text-sm mt-2 text-gray-600">
                     {language === 'en' ? 'Loading names...' : '正在加载姓名...'}
                   </p>
                 )}
-
                 {csvError && (
                   <p className="text-sm mt-2 text-red-600">{csvError}</p>
                 )}
-
                 {nameError && (
                   <p className="text-sm mt-2 text-red-600">{nameError}</p>
                 )}
-
                 {showDropdown && filteredNames.length > 0 && fullName.trim() && (
                   <ul className={`absolute w-full max-h-40 overflow-y-auto border rounded-lg mt-1 shadow-lg z-10 ${darkMode ? 'bg-gray-700 text-gray-100' : 'bg-white text-gray-900'}`}>
                     {filteredNames.map((name, index) => (
@@ -1113,6 +1059,8 @@
                         key={index}
                         onClick={() => {
                           setFullName(name.full);
+                          setSelectedName(name.full);
+                          setNameSelected(true);
                           setShowDropdown(false);
                           setNameError(null);
                         }}
@@ -1124,7 +1072,6 @@
                   </ul>
                 )}
               </div>
-
               <div className="flex flex-wrap space-x-4 justify-center mt-4">
                 <button
                   onClick={handleNameSubmit}
@@ -1147,29 +1094,22 @@
               </div>
             </div>
           )}
-
           {gameState === 'playing' && (
             <div>
-              <h1 className="text-3xl font-bold mb-4 text-custom-blue">
-                {language === 'en' ? '3rd Grade School Trivia' : '三年级学校知识竞赛'}
-              </h1>
-
               {questionsLoading ? (
-                <p className="text-lg mb-6">
-                  {language === 'en' ? 'Loading questions...' : '正在加载问题...'}
-                </p>
+                <p className="text-lg mb-6">{language === 'en' ? 'Loading questions...' : '正在加载问题...'}</p>
               ) : questionsError ? (
                 <p className="text-lg mb-6 text-red-600">{questionsError}</p>
               ) : shuffledQuestions.length === 0 ? (
-                <p className="text-lg mb-6 text-red-600">
-                  {language === 'en' ? 'No questions available.' : '没有可用的问题。'}
-                </p>
+                <p className="text-lg mb-6 text-red-600">{language === 'en' ? 'No questions available.' : '没有可用的问题。'}</p>
               ) : (
                 <>
-                  <p className="text-lg mb-6">
-                    {language === 'en' ? `Welcome, ${fullName}!` : `欢迎, ${fullName}！`}
-                  </p>
-
+                  <p className="text-lg mb-2">
+  {language === 'en' ? `Welcome, ${fullName}!` : `欢迎，${fullName}！`}
+</p>
+<p className="text-md mb-6 font-semibold text-custom-blue">
+  {language === 'en' ? 'How well do you know Elaina & Danny?' : '你有多了解 Elaina 和 Danny？'}
+</p>
                   {gameMode === 'mini' && (
                     <p className="text-md mb-4 text-red-600">
                       {language === 'en'
@@ -1177,15 +1117,12 @@
                         : `剩余时间: ${Math.max(0, 20 - questionElapsedTime).toFixed(2)}秒`}
                     </p>
                   )}
-
                   <h2 className="text-xl font-semibold mb-4">
                     {language === 'en'
                       ? `Question ${currentQuestion + 1} of ${shuffledQuestions.length}`
                       : `第 ${currentQuestion + 1} 题，共 ${shuffledQuestions.length} 题`}
                   </h2>
-
                   <p className="text-lg mb-6">{shuffledQuestions[currentQuestion].question[language]}</p>
-
                   <div className="w-full flex justify-center">
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 max-w-[272px] mx-auto justify-center">
                       {shuffledOptions[currentQuestion]?.map((option, index) => (
@@ -1193,25 +1130,7 @@
                           key={index}
                           onClick={() => handleAnswer(option)}
                           disabled={selectedOption !== null || answered || (gameMode === 'mini' && questionElapsedTime >= 20)}
-                          className={`w-32 h-16 rounded-lg transition-colors p-2 flex items-center justify-center text-center text-sm flex-wrap
-                            ${
-                              answered
-                                ? isAfterCutoff()
-                                  ? option === shuffledQuestions[currentQuestion].correct
-                                    ? 'bg-green-500 text-white'
-                                    : darkMode
-                                      ? 'bg-gray-700 text-gray-100'
-                                      : 'bg-gray-200 text-gray-900'
-                                  : selectedOption === option
-                                    ? 'bg-custom-blue text-white'
-                                    : darkMode
-                                      ? 'bg-gray-700 text-gray-100'
-                                      : 'bg-gray-200 text-gray-900'
-                                : darkMode
-                                  ? 'bg-gray-700 hover:bg-gray-600'
-                                  : 'bg-gray-200 hover:bg-gray-300'
-                            }
-                            disabled:cursor-not-allowed`}
+                          className={`w-32 h-16 rounded-lg transition-colors p-2 flex items-center justify-center text-center text-sm flex-wrap ${darkMode ? 'bg-gray-700 hover:bg-gray-600 disabled:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300 disabled:bg-gray-200'} disabled:cursor-not-allowed`}
                         >
                           {option}
                         </button>
@@ -1222,7 +1141,6 @@
               )}
             </div>
           )}
-
           {gameState === 'result' && (
             <div>
               <h2 className="text-2xl font-semibold mb-4">
@@ -1240,12 +1158,11 @@
               </p>
               <p className="text-md mb-6">
                 {score === shuffledQuestions.length
-                  ? (language === 'en' ? "Perfect! You're a trivia star!" : "完美！你是一个知识明星！")
+                  ? (language === 'en' ? "Perfect! You know Elaina & Danny so well!" : "完美！你太了解 Elaina 和 Danny 了！")
                   : score >= shuffledQuestions.length / 2
-                    ? (language === 'en' ? "Great job! You know your facts!" : "干得好！你懂得很多！")
-                    : (language === 'en' ? "Nice try! Keep studying!" : "不错！继续学习！")}
+                  ? (language === 'en' ? "Nice! You’re definitely part of the inner circle." : "很棒！你绝对是“自己人”！")
+                  : (language === 'en' ? "Good try! Time for a quick couple-facts refresher 😄" : "不错哦！快来补补情侣小知识 😄")}
               </p>
-
               <div className="flex flex-wrap space-x-4 justify-center mb-4">
                 <button
                   onClick={() => setLeaderboardView('top5')}
@@ -1260,7 +1177,6 @@
                   {language === 'en' ? 'All' : '全部'}
                 </button>
               </div>
-
               <div className="flex flex-wrap space-x-4 justify-center mb-4">
                 <button
                   onClick={() => setLeaderboardType('mini')}
@@ -1281,7 +1197,6 @@
                   🏠 {language === 'en' ? <>Main<br />Menu</> : <>主<br />菜单</>}
                 </button>
               </div>
-
               {renderLeaderboards()}
             </div>
           )}
@@ -1289,10 +1204,10 @@
       );
     }
 
+    // Render the app with error boundary
     try {
       const rootElement = document.getElementById('root');
       if (!rootElement) throw new Error('Root element not found');
-
       console.log('Rendering React app with Tailwind classes');
       const root = ReactDOM.createRoot(rootElement);
       root.render(
@@ -1304,7 +1219,7 @@
     } catch (error) {
       console.error('Error rendering React app:', error);
       document.getElementById('root').innerHTML = `
-        <div class="p-8 text-center text-red-600">
+        <div className="p-8 text-center text-red-600">
           <h1>Failed to load the app</h1>
           <p>${error.message}</p>
         </div>
